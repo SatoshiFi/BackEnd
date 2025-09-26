@@ -1,0 +1,36 @@
+# Foundry artifacts
+cache/
+out/
+contracts/out/
+
+# Build info
+contracts/out/build-info/
+
+# Test cache
+cache/fuzz/
+cache/test-failures
+cache/solidity-files-cache.json
+
+# IDE
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+lib/
+
+# Environment
+.env
+.env.local
+
+# Mac
+.DS_Store
+
+# Coverage
+lcov.info
+coverage/
+
+# Temporary files
+*.swp
+*.swo
+*~

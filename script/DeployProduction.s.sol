@@ -1,0 +1,126 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.28;
+
+import "forge-std/Script.sol";
+import "../test/BaseTest.sol";
+
+contract DeployProductionScript is Script, BaseTest {
+    function run() external {
+        uint256 deployerPrivateKey = 0x524edd8063e12ad62457da01e4f1ec3b327dd54b97b5d5879744accb4ab779a7;
+        address deployer = vm.addr(deployerPrivateKey);
+
+        console.log("==================================================");
+        console.log("   Deploying to Sepolia Testnet");
+        console.log("==================================================");
+        console.log("Deployer address:", deployer);
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy all infrastructure using BaseTest setup
+        setUp();
+
+        console.log("\nDeployed Contracts:");
+        console.log("  FROST:", address(frost));
+        console.log("  SPV:", address(spv));
+        console.log("  Factory:", address(factory));
+        console.log("  MultiPoolDAO:", address(multiPoolDAO));
+        console.log("  Calculator Registry:", address(calculatorRegistry));
+        console.log("  Token Factory:", address(tokenFactory));
+
+        // Create a test pool
+        console.log("\nCreating test pool...");
+
+        address[] memory participants = new address[](3);
+        participants[0] = deployer;
+        participants[1] = address(0x1);
+        participants[2] = address(0x2);
+
+        uint256 sessionId = frost.createDKGSession(2, participants);
+        console.log("  DKG Session created:", sessionId);
+
+        // Simulate DKG completion (for testing)
+        // In production, participants would complete this
+        _simulateDKGCompletion(sessionId);
+        console.log("  DKG Session completed");
+
+        // Create pool from FROST
+        (address poolCore, address mpToken) = createPoolFromFrost(
+            sessionId,
+            "BTC",
+            "TESTPOOL-001",
+            "mpBTC",
+            "mpBTC",
+            false,
+            hex"76a91489abcdefabbaabbaabbaabbaabbaabbaabbaabba88ac",
+            0
+        );
+
+        console.log("\nPool Created:");
+        console.log("  Pool Core:", poolCore);
+        console.log("  MP Token:", mpToken);
+
+        vm.stopBroadcast();
+
+        // Save addresses
+        saveAddresses(deployer, poolCore, mpToken);
+
+        console.log("\n==================================================");
+        console.log("   Deployment Complete!");
+        console.log("==================================================");
+    }
+
+    function _simulateDKGCompletion(uint256 sessionId) internal {
+        // Get session participants
+        address[] memory participants = frost.getSessionParticipants(sessionId);
+
+        // Submit all nonces
+        for (uint i = 0; i < participants.length; i++) {
+            vm.stopBroadcast();
+            vm.startPrank(participants[i]);
+            frost.publishNonceCommitment(sessionId, keccak256(abi.encodePacked("nonce", i)));
+            vm.stopPrank();
+            vm.startBroadcast(0x524edd8063e12ad62457da01e4f1ec3b327dd54b97b5d5879744accb4ab779a7);
+        }
+
+        // Submit all shares
+        for (uint i = 0; i < participants.length; i++) {
+            vm.stopBroadcast();
+            vm.startPrank(participants[i]);
+            for (uint j = 0; j < participants.length; j++) {
+                if (i != j) {
+                    frost.publishEncryptedShare(
+                        sessionId,
+                        participants[j],
+                        abi.encodePacked("encrypted_share_", i, "_to_", j)
+                    );
+                }
+            }
+            vm.stopPrank();
+            vm.startBroadcast(0x524edd8063e12ad62457da01e4f1ec3b327dd54b97b5d5879744accb4ab779a7);
+        }
+
+        // Finalize
+        vm.stopBroadcast();
+        vm.startPrank(vm.addr(0x524edd8063e12ad62457da01e4f1ec3b327dd54b97b5d5879744accb4ab779a7));
+        frost.finalizeDKG(sessionId);
+        vm.stopPrank();
+        vm.startBroadcast(0x524edd8063e12ad62457da01e4f1ec3b327dd54b97b5d5879744accb4ab779a7);
+    }
+
+    function saveAddresses(address deployer, address poolCore, address mpToken) private {
+        string memory json = "deployment";
+
+        vm.serializeAddress(json, "deployer", deployer);
+        vm.serializeAddress(json, "frost", address(frost));
+        vm.serializeAddress(json, "spv", address(spv));
+        vm.serializeAddress(json, "factory", address(factory));
+        vm.serializeAddress(json, "multiPoolDAO", address(multiPoolDAO));
+        vm.serializeAddress(json, "calculatorRegistry", address(calculatorRegistry));
+        vm.serializeAddress(json, "tokenFactory", address(tokenFactory));
+        vm.serializeAddress(json, "poolCore", poolCore);
+        string memory finalJson = vm.serializeAddress(json, "mpToken", mpToken);
+
+        vm.writeJson(finalJson, "./deployments/sepolia.json");
+        console.log("\nAddresses saved to: deployments/sepolia.json");
+    }
+}

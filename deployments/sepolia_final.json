@@ -1,0 +1,12 @@
+{
+  "network": "sepolia",
+  "deploymentTime": "2025-09-22",
+  "deployer": "0xa03fbc32C4f52757dBE35480aeB2791b530E9927",
+  "contracts": {
+    "FROST": "0xf36F34A7E484836Fb9C5A608Fd7006747fCB2154",
+    "SPV": "0x19C8b59bF32a22E28B67cdf335821f8479620e59",
+    "MultiPoolDAO": "0x301D2E615cba1a06bd133a0Dd0eE5973271043f1"
+  },
+  "verified": true,
+  "status": "DEPLOYED_AND_VERIFIED"
+}

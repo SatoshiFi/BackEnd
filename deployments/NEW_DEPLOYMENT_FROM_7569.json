@@ -1,0 +1,55 @@
+{
+  "network": "sepolia",
+  "deploymentTime": "2025-09-22",
+  "deployer": "0x4a3146FC66e6482FF1b887845049d11D9f5809d0",
+  "privateKey": "7569ceea62ef59db9a5c688d0ff1b2544110d6a16526a8612196ddd11abfa4cb",
+
+  "contracts": {
+    "CORE": {
+      "FROST": "0x0d823Da3F61e83D08D1159957e9308422b7Eb4f5",
+      "SPV": "0xBf436d852F1b8B512bedA0C2d84bFb1E5391cB89",
+      "MultiPoolDAO": "0x2733cEfaA5be6becb87509FbA088eC3174F1bf9E"
+    },
+
+    "FACTORY": {
+      "Factory": "0xF555D3511809785a5b99F296cba0BCF3c21d5EBD",
+      "Deployer": "0xa3C4DA25AA48B03d8969E857af0724BEa716E6CF",
+      "TokenFactory": "0x9991898EE234b37A8B07d60148eF7d2AbE622C5B"
+    },
+
+    "CALCULATORS": {
+      "Registry": "0xd928d70B66FdbFc535FA094A9f5081222207121D",
+      "FPPS": "0x27A5cB8BE38c95e80e5aA853C468a15D99B33BE0",
+      "PPLNS": "0x8020511C8555128d4b9642862f1c0039C7776BaF",
+      "PPS": "0x3afE98A1e828140c0D82a39cd514BC716ad193c6",
+      "Score": "0x9385F316a364Dcb75Fc08ED174C1c87c34d5D834"
+    },
+
+    "ORACLES": {
+      "Registry": "0xc35d05a610a9FB348B25908D6d198b5247260C57",
+      "Aggregator": "0xd32a2f04c1bF712961b0a561f25074CcE7F3a7b7",
+      "Validator": "0xb637617fC78B020eAd4Fe289a73a5cf8e7fd95Dd"
+    },
+
+    "SYNTHETIC_TOKENS": {
+      "sBTC": "0x9E23e03c534281b03580f5339199E16236A02Bd9",
+      "sDOGE": "0xBaB4b8d15509F5Fc6Cc958a243653f5865CA2348",
+      "sLTC": "0x6248c6446c2E16d4CF5f40D4d0237283Db67E7Cf"
+    },
+
+    "PROXY_IMPLEMENTATIONS": {
+      "Core": "0xeB1573AbeA89DC1135fC5E44E1f8512433f9d950",
+      "Rewards": "0x78b2fdDD8E663b1539682bfC46dEbE4C6f30A250",
+      "Redemption": "0x1Aa64E64f2a34E7c9a28C7336dCB4862556429a4",
+      "Extensions": "0xF6Fe370e146A903AF654bE8721fa2ADF46510AA6"
+    },
+
+    "HANDLERS": {
+      "RewardHandler": "0x53BE1E7C38C7d39A43E62a481a3DE448683A1808",
+      "RedemptionHandler": "0x31FE4f9DF61f0f684b257FF3cf967409C9E78932"
+    }
+  },
+
+  "total_contracts": 26,
+  "status": "DEPLOYED"
+}

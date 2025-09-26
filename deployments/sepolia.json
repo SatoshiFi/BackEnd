@@ -1,0 +1,17 @@
+{
+  "deployer": "0xa03fbc32C4f52757dBE35480aeB2791b530E9927",
+  "frost": "0xc43f68019B43186Cf425f443649F9EfBEB0acDBE",
+  "spv": "0x2eb2Af9795910b5BCF8B2e1f6fA7f82B08747F02",
+  "multiPoolDAO": "0x5054088567a44214E685A0A0a53D2605fEade134",
+  "factory": "0x8339826C6b02FFB9eC74e2112459F3d8253392F4",
+  "calculatorRegistry": "0xFF2076B6CE3ed6b53f021366A97DEEF5326593d4",
+  "fppsCalculator": "0x6b6771de264e684941B26a9E08F31FeDD55D40aD",
+  "oracleRegistry": "0x306Bc23f0B47D24F8b11E8b063E6d581f22CcF08",
+  "aggregator": "0x540a42a7DA512369897b82a3B52350FA7BcE754F",
+  "validator": "0x5DB88cA2238Bc5dC59921e70f9f0EbB63c92151D",
+  "tokenFactory": "0xdc1E9BF3bc6C0D3d849a2850e6a1E2158679b314",
+  "membershipNFT": "0xE56f76C0c349207588A0617Ec4b1AF2e68bA3171",
+  "network": "sepolia",
+  "deploymentTime": "2025-09-22",
+  "rpcUrl": "https://eth-sepolia.g.alchemy.com/v2/JNAmvUzjI42J7hOI0dWtlAawRrNbZiTA"
+}

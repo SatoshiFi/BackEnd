@@ -1,0 +1,23 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0xa03fbc32C4f52757dBE35480aeB2791b530E9927",
+  "deploymentDate": "2025-01-21",
+  "contracts": {
+    "SPV": "0x55C372535015bDeB120333943b53Be2583326692",
+    "FROST": "0x3bbc052Dcca044796cd9FD66a7DE0646b2357598",
+    "TokenFactory": "0x82ED2eeCEF6e0Cfa22939F82aE0cc36B6Db89D56",
+    "OracleRegistry": "0x15a0298551d02B787De23070461047362335345b",
+    "CalculatorRegistry": "0x2fccF362731F37C518Cc4013d62BBaD91524d72f",
+    "PPLNS": "0xe369Adb2FA59bCDd75d8edC08BA7Df87FF23906b",
+    "Aggregator": "0x5eb86B2d351ba65D8C530c287821D99E2FCC9162",
+    "Validator": "0x44Cd01cDB9a3e7c0e8505a20A1f5c66aA5da8860",
+    "MultiPoolDAO": "0xf953fEcdd55c6BfA72FB1A71E6063eed489aC617"
+  },
+  "factory": {
+    "PoolImplementation": "0x2eb2Af9795910b5BCF8B2e1f6fA7f82B08747F02",
+    "FactoryCore": "0xc43f68019B43186Cf425f443649F9EfBEB0acDBE",
+    "PoolDeployer": "0x5054088567a44214E685A0A0a53D2605fEade134"
+  },
+  "note": "Factory refactored into 3 smaller contracts and successfully deployed"
+}

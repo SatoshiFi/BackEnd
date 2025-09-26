@@ -1,0 +1,105 @@
+Compiling 1 files with Solc 0.8.30
+Solc 0.8.30 finished in 512.23ms
+Error: Compiler run failed:
+Warning (2519): This declaration shadows an existing declaration.
+   --> contracts/src/vendor/cryptography/Secp256k1.sol:119:9:
+    |
+119 |         uint256 yCompressed = yIsOdd ? 3 : 2;
+    |         ^^^^^^^^^^^^^^^^^^^
+Note: The shadowed declaration is here:
+  --> contracts/src/vendor/cryptography/Secp256k1.sol:98:5:
+   |
+98 |     function yCompressed(uint256 y) internal pure returns (uint256) {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2519): This declaration shadows an existing declaration.
+  --> contracts/src/core/BitcoinTxParser.sol:16:13:
+   |
+16 |             uint16 val = uint16(uint8(raw[offset+1])) | (uint16(uint8(raw[offset+2])) << 8);
+   |             ^^^^^^^^^^
+Note: The shadowed declaration is here:
+  --> contracts/src/core/BitcoinTxParser.sol:28:9:
+   |
+28 |         uint256 val;
+   |         ^^^^^^^^^^^
+
+Warning (2519): This declaration shadows an existing declaration.
+  --> contracts/src/core/BitcoinTxParser.sol:21:13:
+   |
+21 |             uint32 val = uint32(uint8(raw[offset+1])) |
+   |             ^^^^^^^^^^
+Note: The shadowed declaration is here:
+  --> contracts/src/core/BitcoinTxParser.sol:28:9:
+   |
+28 |         uint256 val;
+   |         ^^^^^^^^^^^
+
+Warning (2519): This declaration shadows an existing declaration.
+    --> contracts/src/MiningPoolDAO.sol:1221:90:
+     |
+1221 |  ... nt32 prevVout, uint64 payoutValue, bytes memory payoutScript, uint64 changeValue, bytes memory  ...
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: The shadowed declaration is here:
+   --> contracts/src/MiningPoolDAO.sol:101:5:
+    |
+101 |     bytes public payoutScript;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (8760): This declaration has the same name as another declaration.
+   --> contracts/src/mocks/MockSPVContract.sol:133:71:
+    |
+133 |     function getBlockStatus(bytes32 blockHash) external view returns (bool isInMainchain, uint64 confirmations_) {
+    |                                                                       ^^^^^^^^^^^^^^^^^^
+Note: The other declaration is here:
+   --> contracts/src/mocks/MockSPVContract.sol:154:5:
+    |
+154 |     function isInMainchain(bytes32 blockHash) external view returns (bool) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Error (6160): Wrong argument count for function call: 0 arguments given but expected 1.
+  --> script/DeployFullSystem.s.sol:60:26:
+   |
+60 |         oracleRegistry = new StratumOracleRegistry();
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Error (9553): Invalid type for argument in function call. Invalid implicit conversion from bytes32 to address requested.
+  --> script/DeployFullSystem.s.sol:78:13:
+   |
+78 |             keccak256("PPLNS"),  // calculator type
+   |             ^^^^^^^^^^^^^^^^^^
+
+Error (9553): Invalid type for argument in function call. Invalid implicit conversion from address to enum CalculatorRegistry.SchemeType requested.
+  --> script/DeployFullSystem.s.sol:79:13:
+   |
+79 |             address(pplnsCalculator),  // implementation
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Error (9553): Invalid type for argument in function call. Invalid implicit conversion from bool to string memory requested.
+  --> script/DeployFullSystem.s.sol:80:13:
+   |
+80 |             true,  // is active
+   |             ^^^^
+
+Error (9553): Invalid type for argument in function call. Invalid implicit conversion from int_const 1000 to string memory requested.
+  --> script/DeployFullSystem.s.sol:81:13:
+   |
+81 |             1000,  // fee basis points (10%)
+   |             ^^^^
+
+Error (9553): Invalid type for argument in function call. Invalid implicit conversion from int_const 0 to string memory requested.
+  --> script/DeployFullSystem.s.sol:82:13:
+   |
+82 |             0,  // minimum blocks
+   |             ^
+
+Error (6160): Wrong argument count for function call: 7 arguments given but expected 8.
+   --> script/DeployFullSystem.s.sol:114:9:
+    |
+114 |         factory.setDependencies(
+    |         ^ (Relevant source part starts here and spans across multiple lines).
+
+Error (9582): Member "POOL_FACTORY_ROLE" not found or not visible after argument-dependent lookup in contract initialFROSTCoordinator.
+   --> script/DeployFullSystem.s.sol:127:25:
+    |
+127 |         frost.grantRole(frost.POOL_FACTORY_ROLE(), address(factory));
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^

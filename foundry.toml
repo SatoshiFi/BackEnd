@@ -1,0 +1,16 @@
+[profile.default]
+src = 'contracts/src'
+out = 'contracts/out'
+libs = ['lib']
+optimizer = true
+optimizer_runs = 1
+via_ir = true
+solc_version = "0.8.30"
+
+remappings = [
+    '@openzeppelin/contracts=lib/openzeppelin-contracts/contracts',
+    '@openzeppelin/contracts-upgradeable=lib/openzeppelin-contracts-upgradeable/contracts',
+]
+
+[profile.test]
+gas_reports = true

@@ -1,0 +1,98 @@
+No files changed, compilation skipped
+Script ran successfully.
+
+== Logs ==
+  ========================================
+  Full Mining Pool System Deployment
+  ========================================
+  Deployer: 0xa03fbc32C4f52757dBE35480aeB2791b530E9927
+  Chain: Sepolia
+  Balance: 140 finney
+  
+  1. Deploying Mock SPV...
+     SPV deployed: 0x55C372535015bDeB120333943b53Be2583326692
+  
+2. Deploying FROST Coordinator...
+     FROST deployed: 0x3bbc052Dcca044796cd9FD66a7DE0646b2357598
+  
+3. Deploying Pool Factory...
+     Factory deployed: 0x82ED2eeCEF6e0Cfa22939F82aE0cc36B6Db89D56
+  
+4. Deploying Token Factory...
+     Token Factory deployed: 0x15a0298551d02B787De23070461047362335345b
+  
+5. Deploying Oracle Registry...
+     Oracle Registry deployed: 0x2fccF362731F37C518Cc4013d62BBaD91524d72f
+  
+6. Deploying Calculator Registry...
+     Calculator Registry deployed: 0xe369Adb2FA59bCDd75d8edC08BA7Df87FF23906b
+  
+7. Deploying PPLNS Calculator...
+     PPLNS Calculator deployed: 0x98B306823F05b433EC28312720b796EB2DdbE356
+  
+8. Deploying Stratum Aggregator...
+     Aggregator deployed: 0x2a7945B628d204a06DE81a92b3eCd80A85853777
+  
+9. Deploying Stratum Validator...
+     Validator deployed: 0x5eb86B2d351ba65D8C530c287821D99E2FCC9162
+  
+10. Deploying MultiPoolDAO...
+      MultiPoolDAO deployed: 0x44Cd01cDB9a3e7c0e8505a20A1f5c66aA5da8860
+  
+11. Configuring Factory Dependencies...
+      Factory dependencies configured
+  
+12. Setting up Calculator Registry...
+      Deployer authorized as author
+      PPLNS Calculator registered
+  
+13. Additional setup...
+      Note: Factory can create pools through FROST
+      No additional roles needed
+  
+========================================
+  DEPLOYMENT COMPLETE!
+  ========================================
+  
+Core Contracts:
+    SPV: 0x55C372535015bDeB120333943b53Be2583326692
+    FROST: 0x3bbc052Dcca044796cd9FD66a7DE0646b2357598
+    Factory: 0x82ED2eeCEF6e0Cfa22939F82aE0cc36B6Db89D56
+    Token Factory: 0x15a0298551d02B787De23070461047362335345b
+  
+Supporting Contracts:
+    Calculator Registry: 0xe369Adb2FA59bCDd75d8edC08BA7Df87FF23906b
+    PPLNS Calculator: 0x98B306823F05b433EC28312720b796EB2DdbE356
+    Oracle Registry: 0x2fccF362731F37C518Cc4013d62BBaD91524d72f
+    Stratum Aggregator: 0x2a7945B628d204a06DE81a92b3eCd80A85853777
+    Stratum Validator: 0x5eb86B2d351ba65D8C530c287821D99E2FCC9162
+    MultiPoolDAO: 0x44Cd01cDB9a3e7c0e8505a20A1f5c66aA5da8860
+  
+[SUCCESS] System ready for mining pool creation!
+  
+Next steps:
+  1. Create DKG session: frost.createDKGSession(threshold, participants)
+  2. Participants submit nonces
+  3. Finalize DKG to create pool
+  
+Deployment JSON (save this!):
+  {
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0xa03fbc32C4f52757dBE35480aeB2791b530E9927",
+  "timestamp": 1758459696,
+  "contracts": {
+    "spv": "0x55C372535015bDeB120333943b53Be2583326692",
+    "frost": "0x3bbc052Dcca044796cd9FD66a7DE0646b2357598",
+    "factory": "0x82ED2eeCEF6e0Cfa22939F82aE0cc36B6Db89D56",
+    "tokenFactory": "0x15a0298551d02B787De23070461047362335345b",
+    "calculatorRegistry": "0xe369Adb2FA59bCDd75d8edC08BA7Df87FF23906b",
+    "pplnsCalculator": "0x98B306823F05b433EC28312720b796EB2DdbE356",
+    "oracleRegistry": "0x2fccF362731F37C518Cc4013d62BBaD91524d72f",
+    "aggregator": "0x2a7945B628d204a06DE81a92b3eCd80A85853777",
+    "validator": "0x5eb86B2d351ba65D8C530c287821D99E2FCC9162",
+    "multiPoolDAO": "0x44Cd01cDB9a3e7c0e8505a20A1f5c66aA5da8860"
+  }
+}
+Error: `MiningPoolFactory` is above the contract size limit (81551 > 24576).
+Error: IO error: not a terminal

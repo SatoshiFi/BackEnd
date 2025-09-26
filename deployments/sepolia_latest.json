@@ -1,0 +1,13 @@
+{
+  "network": "sepolia",
+  "deploymentTime": "2025-09-22",
+  "deployer": "0xa03fbc32C4f52757dBE35480aeB2791b530E9927",
+  "contracts": {
+    "FROST": "0x203a40F0a46A5f3B407B8557d7F2B9Dc8aDaa6b0",
+    "SPV": "0xBeC4DE24267045823931f7b605b2D73bDF6912F1",
+    "MultiPoolDAO": "0xd26d1Ba7dFb8b0F274622378219fBc1B9357b507"
+  },
+  "transactionHash": "see broadcast/DeployMinimal.s.sol/11155111/run-latest.json",
+  "gasUsed": "11454054",
+  "status": "DEPLOYED_SUCCESSFULLY"
+}
