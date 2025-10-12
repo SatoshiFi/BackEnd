@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-// Minimal interfaces
 interface IPoolDeployer {
     function deployPool(
         address spv,
@@ -39,6 +38,7 @@ contract MiningPoolFactoryCore is AccessControl, ReentrancyGuard {
         address poolCore;
         address mpToken;
         string poolId;
+        string asset;
         bool isActive;
         uint256 createdAt;
         address creator;
@@ -55,8 +55,9 @@ contract MiningPoolFactoryCore is AccessControl, ReentrancyGuard {
     address public multiPoolDAO;
     address public poolDeployer;
 
-    // Storage
-    mapping(string => address) public poolsByAsset;
+    // ИСПРАВЛЕНО: множество пулов для одного asset
+    mapping(string => address[]) public poolsByAsset;
+    mapping(string => address) public poolByPoolId;  // уникальность по poolId
     mapping(address => bool) public isValidPool;
     mapping(address => PoolInfo) public poolsInfo;
     address[] public allPools;
@@ -99,13 +100,14 @@ contract MiningPoolFactoryCore is AccessControl, ReentrancyGuard {
     }
 
     function createPool(PoolParams calldata params)
-        external
-        nonReentrant
-        onlyRole(POOL_MANAGER_ROLE)
-        returns (address poolAddress, address mpTokenAddress)
+    external
+    nonReentrant
+    onlyRole(POOL_MANAGER_ROLE)
+    returns (address poolAddress, address mpTokenAddress)
     {
         require(poolDeployer != address(0), "Deployer not set");
-        require(poolsByAsset[params.asset] == address(0), "Pool exists for asset");
+        require(bytes(params.poolId).length > 0, "Pool ID required");
+        require(poolByPoolId[params.poolId] == address(0), "Pool ID already exists");
 
         // Encode params for deployer
         bytes memory deployParams = abi.encode(
@@ -134,14 +136,16 @@ contract MiningPoolFactoryCore is AccessControl, ReentrancyGuard {
             deployParams
         );
 
-        // Store pool info
-        poolsByAsset[params.asset] = poolAddress;
+        // ИСПРАВЛЕНО: храним по poolId, массив для asset
+        poolsByAsset[params.asset].push(poolAddress);
+        poolByPoolId[params.poolId] = poolAddress;
         isValidPool[poolAddress] = true;
 
         poolsInfo[poolAddress] = PoolInfo({
             poolCore: poolAddress,
             mpToken: mpTokenAddress,
             poolId: params.poolId,
+            asset: params.asset,
             isActive: true,
             createdAt: block.timestamp,
             creator: msg.sender
@@ -158,6 +162,19 @@ contract MiningPoolFactoryCore is AccessControl, ReentrancyGuard {
         );
 
         return (poolAddress, mpTokenAddress);
+    }
+
+    // НОВЫЕ ФУНКЦИИ для работы с массивами
+    function getPoolsByAsset(string calldata asset) external view returns (address[] memory) {
+        return poolsByAsset[asset];
+    }
+
+    function getPoolsByAssetCount(string calldata asset) external view returns (uint256) {
+        return poolsByAsset[asset].length;
+    }
+
+    function getPoolByPoolId(string calldata poolId) external view returns (address) {
+        return poolByPoolId[poolId];
     }
 
     function getPoolCount() external view returns (uint256) {

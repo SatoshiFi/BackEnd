@@ -3,14 +3,9 @@ pragma solidity ^0.8.19;
 
 /**
  * @title StratumDataAggregator
- * @dev Агрегация и консенсус данных от множественных провайдеров Stratum + привязка воркеров к DAO-мемберам
  */
 contract StratumDataAggregator
 {
-
-    // ------------------------------------------------------------------------
-    // Структуры
-    // ------------------------------------------------------------------------
     struct WorkerData {
         address workerAddress;
         uint256 totalShares;
@@ -54,30 +49,24 @@ contract StratumDataAggregator
         bool isActive;
     }
 
-    // локальная структура для aggregateMembers
-    struct MemberData 
+    struct MemberData
     {
-    address member;              // владелец / DAO мембер
-    address payoutAddress;       // адрес для выплат
-    uint256 aggregatedValidShares;
-    uint256 aggregatedTotalShares;
-    uint256 aggregatedHashRate;  // уже было
-    uint256 lastActivity;
-    bool isActive;
-
-    // новые поля для интеграции с DistributionScheme
-    string workerId;             // идентификатор воркера (может быть пустым)
-    uint256 hashRate;            // хешрейт конкретного воркера (или агрегированный)
+        address member;
+        address payoutAddress;
+        uint256 aggregatedValidShares;
+        uint256 aggregatedTotalShares;
+        uint256 aggregatedHashRate;
+        uint256 lastActivity;
+        bool isActive;
+        string workerId;
+        uint256 hashRate;
     }
 
-    // ------------------------------------------------------------------------
-    // Состояние
-    // ------------------------------------------------------------------------
     address public oracleRegistry;
     address public admin;
     uint256 public periodCounter;
     uint256 public minProviders;
-    uint256 public consensusThreshold; // в базисе 10000 -> 6667 = 66.67%
+    uint256 public consensusThreshold;
     uint256 public submissionWindow;
 
     mapping(uint256 => AggregationPeriod) public periods;
@@ -85,32 +74,44 @@ contract StratumDataAggregator
     mapping(address => bool) public authorizedProviders;
     mapping(bytes32 => uint256) public hashSubmissions;
 
-    // воркер данные
     mapping(address => WorkerData) public workerData;
     mapping(address => address) public workerOwner;
     address[] public allWorkers;
     mapping(address => bool) internal isWorkerRegistered;
 
-    // привязки воркеров к пулу (ключ — адрес пула)
     mapping(address => address[]) public poolWorkers;
     mapping(address => mapping(address => bool)) internal isWorkerInPool;
 
-    // ------------------------------------------------------------------------
-    // События
-    // ------------------------------------------------------------------------
+    mapping(address => string) public workerBitcoinAddress;
+    mapping(string => address) public workerIdToAddress;
+    mapping(address => address[]) public minerWorkers;
+    mapping(address => uint256) public workerLastActivity;
+
     event PeriodStarted(uint256 indexed periodId, uint256 indexed poolId, uint256 startTime, uint256 endTime);
     event DataSubmitted(uint256 indexed periodId, address indexed provider, bytes32 dataHash, uint256 totalShares);
     event ConsensusReached(uint256 indexed periodId, bytes32 consensusHash, uint256 agreedProviders);
-    // упрощённое событие финализации (структуры в событиях лучше не использовать)
     event PeriodFinalized(uint256 indexed periodId);
     event ProviderAuthorized(address indexed provider, bool authorized);
     event WorkerOwnerSet(address indexed worker, address indexed member);
     event WorkerRegisteredToPool(address indexed pool, address indexed worker);
     event WorkerDeregisteredFromPool(address indexed pool, address indexed worker);
 
-    // ------------------------------------------------------------------------
-    // Модификаторы
-    // ------------------------------------------------------------------------
+    event WorkerRegisteredFull(
+        address indexed workerAddress,
+        address indexed minerAddress,
+        string bitcoinAddress,
+        string workerId
+    );
+    event WorkerStatsUpdated(
+        address indexed workerAddress,
+        uint256 totalShares,
+        uint256 validShares
+    );
+    event BitcoinAddressUpdated(
+        address indexed workerAddress,
+        string newBitcoinAddress
+    );
+
     modifier onlyAdmin() {
         require(msg.sender == admin, "Only admin");
         _;
@@ -141,13 +142,175 @@ contract StratumDataAggregator
         admin = _admin;
         periodCounter = 0;
         minProviders = 3;
-        consensusThreshold = 6667; // 66.67%
+        consensusThreshold = 6667;
         submissionWindow = 10 minutes;
     }
 
-    // ------------------------------------------------------------------------
-    // Worker / DAO
-    // ------------------------------------------------------------------------
+    function registerWorkerFull(
+        address workerAddress,
+        address minerAddress,
+        string memory bitcoinAddress,
+        string memory workerId
+    ) external onlyAdmin {
+        require(minerAddress != address(0), "Invalid miner address");
+        require(bytes(bitcoinAddress).length > 0, "Invalid bitcoin address");
+        require(bytes(workerId).length > 0, "Invalid worker ID");
+
+        // If worker already has an owner, remove from old owner's array
+        address currentOwner = workerOwner[workerAddress];
+        if (currentOwner != address(0) && currentOwner != minerAddress) {
+            address[] storage oldWorkers = minerWorkers[currentOwner];
+            for (uint256 i = 0; i < oldWorkers.length; i++) {
+                if (oldWorkers[i] == workerAddress) {
+                    oldWorkers[i] = oldWorkers[oldWorkers.length - 1];
+                    oldWorkers.pop();
+                    break;
+                }
+            }
+        }
+
+        // Update ownership (overwrites if exists)
+        workerOwner[workerAddress] = minerAddress;
+        workerBitcoinAddress[workerAddress] = bitcoinAddress;
+        workerIdToAddress[workerId] = workerAddress;
+
+        // Add to new owner's array only if not already there
+        if (currentOwner != minerAddress) {
+            minerWorkers[minerAddress].push(workerAddress);
+        }
+
+        if (!isWorkerRegistered[workerAddress]) {
+            allWorkers.push(workerAddress);
+            isWorkerRegistered[workerAddress] = true;
+        }
+
+        workerLastActivity[workerAddress] = block.timestamp;
+
+        emit WorkerRegisteredFull(workerAddress, minerAddress, bitcoinAddress, workerId);
+    }
+
+    function getWorkerOwnerByWorkerId(string memory workerId)
+    external
+    view
+    returns (bool registered, address workerAddress, address minerAddress)
+    {
+        address wAddr = workerIdToAddress[workerId];
+        if (wAddr == address(0)) {
+            return (false, address(0), address(0));
+        }
+        address miner = workerOwner[wAddr];
+        return (miner != address(0), wAddr, miner);
+    }
+
+    function getWorkersByMiner(address minerAddress)
+    external
+    view
+    returns (address[] memory)
+    {
+        return minerWorkers[minerAddress];
+    }
+
+    function getMinerWorkerCount(address minerAddress)
+    external
+    view
+    returns (uint256)
+    {
+        return minerWorkers[minerAddress].length;
+    }
+
+    function getWorkerBitcoinAddress(address workerAddress)
+    external
+    view
+    returns (string memory)
+    {
+        return workerBitcoinAddress[workerAddress];
+    }
+
+    function getBitcoinAddressByWorkerId(string memory workerId)
+    external
+    view
+    returns (string memory)
+    {
+        address wAddr = workerIdToAddress[workerId];
+        require(wAddr != address(0), "Worker not found");
+        return workerBitcoinAddress[wAddr];
+    }
+
+    function getWorkerInfo(address workerAddress)
+    external
+    view
+    returns (
+        bool registered,
+        address owner,
+        string memory bitcoinAddress,
+        uint256 totalShares,
+        uint256 validShares,
+        uint256 lastActivity
+    )
+    {
+        address currentOwner = workerOwner[workerAddress];
+        WorkerData memory wd = workerData[workerAddress];
+        return (
+            currentOwner != address(0),
+                currentOwner,
+                workerBitcoinAddress[workerAddress],
+                wd.totalShares,
+                wd.validShares,
+                workerLastActivity[workerAddress]
+        );
+    }
+
+    function getWorkerInfoByWorkerId(string memory workerId)
+    external
+    view
+    returns (
+        bool registered,
+        address workerAddress,
+        address owner,
+        string memory bitcoinAddress,
+        uint256 totalShares,
+        uint256 validShares,
+        uint256 lastActivity
+    )
+    {
+        address wAddr = workerIdToAddress[workerId];
+        if (wAddr == address(0)) {
+            return (false, address(0), address(0), "", 0, 0, 0);
+        }
+
+        address currentOwner = workerOwner[wAddr];
+        WorkerData memory wd = workerData[wAddr];
+        return (
+            currentOwner != address(0),
+                wAddr,
+                currentOwner,
+                workerBitcoinAddress[wAddr],
+                wd.totalShares,
+                wd.validShares,
+                workerLastActivity[wAddr]
+        );
+    }
+
+    function getTotalWorkersCount()
+    external
+    view
+    returns (uint256)
+    {
+        return allWorkers.length;
+    }
+
+    function updateWorkerBitcoinAddress(
+        address workerAddress,
+        string memory newBitcoinAddress
+    ) external {
+        require(workerOwner[workerAddress] == msg.sender, "Not worker owner");
+        require(bytes(newBitcoinAddress).length > 0, "Invalid bitcoin address");
+
+        workerBitcoinAddress[workerAddress] = newBitcoinAddress;
+
+        emit BitcoinAddressUpdated(workerAddress, newBitcoinAddress);
+    }
+
     function setWorkerOwner(address worker, address member) external onlyAdmin {
         require(worker != address(0), "Invalid worker");
         require(member != address(0), "Invalid member");
@@ -155,7 +318,6 @@ contract StratumDataAggregator
         emit WorkerOwnerSet(worker, member);
     }
 
-    /// @notice Регистрирует воркера в пуле (вызывается авторизованным провайдером)
     function registerWorkerToPool(address pool, address worker) external onlyAuthorizedProvider {
         require(pool != address(0), "pool=0");
         require(worker != address(0), "worker=0");
@@ -166,13 +328,11 @@ contract StratumDataAggregator
         }
     }
 
-    /// @notice Дерегистрация воркера из пула (только админ)
     function deregisterWorkerFromPool(address pool, address worker) external onlyAdmin {
         require(isWorkerInPool[pool][worker], "not in pool");
         address[] storage arr = poolWorkers[pool];
         for (uint256 i = 0; i < arr.length; i++) {
             if (arr[i] == worker) {
-                // swap & pop
                 arr[i] = arr[arr.length - 1];
                 arr.pop();
                 isWorkerInPool[pool][worker] = false;
@@ -182,7 +342,6 @@ contract StratumDataAggregator
         }
     }
 
-    /// @notice Агрегация воркеров по владельцам (членам DAO) — использует глобальный allWorkers
     function aggregateMembers(uint256 /*poolId*/) external view returns (MemberData[] memory members) {
         if (allWorkers.length == 0) {
             return new MemberData[](0);
@@ -222,8 +381,8 @@ contract StratumDataAggregator
                     isActive: wd.isActive,
                     workerId: "",
                     hashRate: 0
-                        });
-                        uniqueCount++;
+                });
+                uniqueCount++;
             }
         }
 
@@ -234,15 +393,12 @@ contract StratumDataAggregator
         return members;
     }
 
-    // ------------------------------------------------------------------------
-    // AggregationPeriod / Consensus
-    // ------------------------------------------------------------------------
     function startAggregationPeriod(
         uint256 poolId,
-        uint256 startTime, 
-        uint256 endTime 
-        )
-        external onlyOracleRegistry returns (uint256 periodId)
+        uint256 startTime,
+        uint256 endTime
+    )
+    external onlyOracleRegistry returns (uint256 periodId)
     {
         require(endTime > startTime, "Invalid time range");
         require(startTime <= block.timestamp, "Start time in future");
@@ -256,21 +412,21 @@ contract StratumDataAggregator
             endTime: endTime,
             submissionDeadline: block.timestamp + submissionWindow,
             submissions: new ProviderSubmission[](0),
-            result: AggregatedData({
-                poolId: poolId,
-                periodStart: startTime,
-                periodEnd: endTime,
-                totalShares: 0,
-                validShares: 0,
-                uniqueWorkers: 0,
-                avgDifficulty: 0,
-                consensusHash: bytes32(0),
-                providerCount: 0,
-                agreedProviders: 0,
-                isFinalized: false,
-                finalizedAt: 0
-            }),
-            isActive: true
+                                              result: AggregatedData({
+                                                  poolId: poolId,
+                                                  periodStart: startTime,
+                                                  periodEnd: endTime,
+                                                  totalShares: 0,
+                                                  validShares: 0,
+                                                  uniqueWorkers: 0,
+                                                  avgDifficulty: 0,
+                                                  consensusHash: bytes32(0),
+                                                                     providerCount: 0,
+                                                                     agreedProviders: 0,
+                                                                     isFinalized: false,
+                                                                     finalizedAt: 0
+                                              }),
+                                              isActive: true
         });
 
         poolPeriods[poolId].push(periodId);
@@ -312,7 +468,7 @@ contract StratumDataAggregator
     }
 
     function _validateSubmission(bytes32 dataHash, uint256 totalShares, uint256 validShares, bytes memory signature)
-        internal pure returns (bool)
+    internal pure returns (bool)
     {
         if (dataHash == bytes32(0)) return false;
         if (validShares > totalShares) return false;
@@ -416,9 +572,6 @@ contract StratumDataAggregator
         _finalizePeriod(periodId);
     }
 
-    // ------------------------------------------------------------------------
-    // Getters / Utils
-    // ------------------------------------------------------------------------
     function authorizeProvider(address provider, bool authorized) external onlyAdmin {
         authorizedProviders[provider] = authorized;
         emit ProviderAuthorized(provider, authorized);
@@ -478,7 +631,6 @@ contract StratumDataAggregator
         return (totalPeriods, finalizedPeriods, activePeriods, avgProvidersPerPeriod);
     }
 
-    /// @notice Возвращает данные всех воркеров, связанных с пулом `pool`
     function getWorkerData(address pool) external view returns (WorkerData[] memory) {
         address[] storage workers = poolWorkers[pool];
         if (workers.length == 0) {
@@ -503,6 +655,8 @@ contract StratumDataAggregator
             lastSubmission: block.timestamp,
             isActive: isActive
         });
+        workerLastActivity[worker] = block.timestamp;
+        emit WorkerStatsUpdated(worker, totalShares, validShares);
     }
 
     function getAllWorkers() external view returns (address[] memory) {

@@ -5,22 +5,7 @@ import "../MiningPoolDAOCore.sol";
 import "../RewardHandler.sol";
 import "../RedemptionHandler.sol";
 import "./PoolTokenFactory.sol";
-import "../calculators/CalculatorRegistry.sol";
-
-interface IMiningPoolFactoryCore {
-    function spvContract() external view returns (address);
-    function frostCoordinator() external view returns (address);
-    function calculatorRegistry() external view returns (address);
-    function stratumDataAggregator() external view returns (address);
-    function stratumDataValidator() external view returns (address);
-    function oracleRegistry() external view returns (address);
-    function poolTokenFactory() external view returns (address);
-    function multiPoolDAO() external view returns (address);
-}
-
-interface ICalculatorRegistry {
-    function getCalculator(uint256 id) external returns (address);
-}
+import "../interfaces/IMiningPoolFactoryCore.sol";
 
 interface IPoolTokenFactory {
     function createMpToken(string memory name, string memory symbol, address pool) external returns (address);
@@ -46,16 +31,24 @@ contract PoolDeployerV2 {
         _;
     }
 
-    constructor(address _factory) {
+    constructor(address _factory, address _spvContract) {
+        require(_factory != address(0), "Invalid factory");
+        require(_spvContract != address(0), "Invalid SPV contract");
+
         factory = _factory;
-        rewardHandler = address(new RewardHandler());
+
+        rewardHandler = address(new RewardHandler(_spvContract));
         redemptionHandler = address(new RedemptionHandler());
     }
 
     function deployPool(
         address, address, address, address, address, address, address, address,
         bytes calldata params
-    ) external onlyFactory returns (address poolAddress, address mpTokenAddress) {
+    )
+    external
+    onlyFactory
+    returns (address poolAddress, address mpTokenAddress)
+    {
         // Get dependencies from factory
         address spv = IMiningPoolFactoryCore(factory).spvContract();
         address frost = IMiningPoolFactoryCore(factory).frostCoordinator();
@@ -68,20 +61,19 @@ contract PoolDeployerV2 {
         // Decode params
         (
             string memory asset,
-            string memory poolId,
-            uint256 pubX,
-            uint256 pubY,
-            string memory mpName,
-            string memory mpSymbol,
-            bool restrictedMp,
-            bytes memory payoutScript,
-            uint256 calculatorId,
-            address creator
+         string memory poolId,
+         uint256 pubX,
+         uint256 pubY,
+         string memory mpName,
+         string memory mpSymbol,
+         bool restrictedMp,
+         bytes memory payoutScript,
+         uint256 calculatorId,
+         address creator
         ) = abi.decode(params, (string, string, uint256, uint256, string, string, bool, bytes, uint256, address));
 
-        // Verify calculator
-        address calculatorImpl = ICalculatorRegistry(calcRegistry).getCalculator(calculatorId);
-        require(calculatorImpl != address(0), "Invalid calculator");
+        // NOTE: Calculator verification removed - Factory handles this
+        // Deployer should not call CalculatorRegistry directly
 
         // Deploy core pool contract
         MiningPoolDAOCore pool = new MiningPoolDAOCore();
@@ -142,5 +134,9 @@ contract PoolDeployerV2 {
         });
 
         return (poolAddress, mpTokenAddress);
+    }
+
+    function getPoolAddresses(address pool) external view returns (PoolAddresses memory) {
+        return poolRegistry[pool];
     }
 }
